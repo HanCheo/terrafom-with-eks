@@ -1,17 +1,29 @@
+# https://github.com/DataDog/datadog-operator/blob/main/docs/configuration.v2alpha1.md
 apiVersion: datadoghq.com/v2alpha1
 kind: DatadogAgent
 metadata:
   name: datadog
 spec:
   global:
-    site: datadoghq.com
-    clusterName: cluster-istio
+    # Site is the Datadog intake site Agent data are sent to.
+    # Set to 'datadoghq.com' to send data to the US1 site (default).
+    # Set to 'datadoghq.eu' to send data to the EU site.
+    # Set to 'us3.datadoghq.com' to send data to the US3 site.
+    # Set to 'us5.datadoghq.com' to send data to the US5 site.
+    # Set to 'ddog-gov.com' to send data to the US1-FED site.
+    # Set to 'ap1.datadoghq.com' to send data to the AP1 site. Default: 'datadoghq.com'
+    site: us5.datadoghq.com
+    clusterName: monitoring
     kubelet:
       tlsVerify: false
+    # config your datadog api and app key
     credentials:
-      apiKey: test-key
-      appKey: test-key
+      apiKey: api-key
+      appKey: application-key
   features:
+    admissionController:
+      enabled: true
+      mutateUnlabelled: false
     clusterChecks:
       useClusterChecksRunners: true
     logCollection:
@@ -23,6 +35,8 @@ spec:
       enabled: true
     apm:
       enabled: true
+      instrumentation:
+        enabled: true
       hostPortConfig:
         enabled: true
         hostPort: 8126
@@ -32,6 +46,10 @@ spec:
     clusterAgent:
       image:
         name: gcr.io/datadoghq/cluster-agent:latest
+      labels:
+        sidecar.istio.io/inject: 'false'
     nodeAgent:
       image:
         name: gcr.io/datadoghq/agent:latest
+      labels:
+        sidecar.istio.io/inject: 'false'

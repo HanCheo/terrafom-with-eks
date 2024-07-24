@@ -3,17 +3,6 @@ kind: IstioOperator
 metadata:
   namespace: istio-system
   name: istio-control-plane
-  annotations:
-    ad.datadoghq.com/endpoints.check_names: '["istio"]'
-    ad.datadoghq.com/endpoints.init_configs: '[{}]'
-    ad.datadoghq.com/endpoints.instances: |
-      [
-        {
-          "istiod_endpoint": "http://%%host%%:15014/metrics",
-          "send_histograms_buckets": true
-          "use_openmetrics": "true"
-        }
-      ]
 spec:
   profile: default
   tag: '1.22.3'
@@ -25,6 +14,9 @@ spec:
         datadog:
           address: $(HOST_IP):8126
         sampling: 100.0 # 모든 request를 tracing 한다
+      proxyMetadata:
+        # https://github.com/istio/istio/issues/51430 istio brake datadog tracing
+        DD_REMOTE_CONFIGURATION_ENABLED: 'false'
     accessLogFile: /dev/stdout
     outboundTrafficPolicy:
       mode: ALLOW_ANY
@@ -59,6 +51,16 @@ spec:
     pilot:
       enabled: true
       k8s:
+        podAnnotations:
+          ad.datadoghq.com/discovery.check_names: '["istio"]'
+          ad.datadoghq.com/discovery.init_configs: '[{}]'
+          ad.datadoghq.com/discovery.instances: |
+            [
+              {
+                "istiod_endpoint": "http://%%host%%:15014/metrics",
+                "use_openmetrics": "true"
+              }
+            ]
         hpaSpec:
           minReplicas: 1
         resources:
