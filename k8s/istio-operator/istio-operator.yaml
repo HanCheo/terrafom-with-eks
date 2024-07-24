@@ -1,0 +1,69 @@
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  namespace: istio-system
+  name: istio-control-plane
+  annotations:
+    ad.datadoghq.com/endpoints.check_names: '["istio"]'
+    ad.datadoghq.com/endpoints.init_configs: '[{}]'
+    ad.datadoghq.com/endpoints.instances: |
+      [
+        {
+          "istiod_endpoint": "http://%%host%%:15014/metrics",
+          "send_histograms_buckets": true
+          "use_openmetrics": "true"
+        }
+      ]
+spec:
+  profile: default
+  tag: '1.22.3'
+  meshConfig:
+    enableTracing: true
+    defaultConfig:
+      holdApplicationUntilProxyStarts: true
+      tracing: # Enable Datadog Tracing
+        datadog:
+          address: $(HOST_IP):8126
+        sampling: 100.0 # 모든 request를 tracing 한다
+    accessLogFile: /dev/stdout
+    outboundTrafficPolicy:
+      mode: ALLOW_ANY
+  values:
+    global:
+      istioNamespace: istio-system
+    cni:
+      excludeNamespaces:
+        - istio-system
+  components:
+    egressGateways:
+      - name: istio-egressgateway
+        enabled: true
+        k8s:
+          hpaSpec:
+            minReplicas: 1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+    ingressGateways:
+      - name: istio-ingressgateway
+        enabled: true
+        k8s:
+          hpaSpec:
+            minReplicas: 1
+          serviceAnnotations:
+            alb.ingress.kubernetes.io/healthcheck-path: /healthz/ready
+            alb.ingress.kubernetes.io/healthcheck-port: '32197'
+    pilot:
+      enabled: true
+      k8s:
+        hpaSpec:
+          minReplicas: 1
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
