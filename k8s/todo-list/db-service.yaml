@@ -21,6 +21,7 @@ metadata:
     tags.datadoghq.com/service: todo-db
     tags.datadoghq.com/version: v1
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: todo-db

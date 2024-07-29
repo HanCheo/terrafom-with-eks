@@ -1,5 +1,8 @@
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
+metadata:
+  namespace: istio-system
+  name: istiocontrolplane
 spec:
   profile: default
   tag: '1.22.3'
@@ -13,15 +16,11 @@ spec:
         sampling: 100.0 # 모든 request를 tracing 한다
       proxyMetadata:
         # https://github.com/istio/istio/issues/51430 istio brake datadog tracing
-        DD_REMOTE_CONFIGURATION_ENABLED: 'false'
+        DD_REMOTE_CONFIGURATION_ENABLED: false
     accessLogFile: /dev/stdout
     outboundTrafficPolicy:
       mode: ALLOW_ANY
   values:
-    global:
-      logging:
-        level: debug # 또는 info, warn, error 등
-      istioNamespace: istio-system
     cni:
       excludeNamespaces:
         - istio-system
@@ -34,16 +33,31 @@ spec:
         k8s:
           hpaSpec:
             minReplicas: 1
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true
         k8s:
+          service:
+            type: LoadBalancer
+          # istio에서 l7의 기능을 대부분 제공해주고 있기 때문에 처리량이 높은 nlb로 설정한다.
+          serviceAnnotations:
+              service.beta.kubernetes.io/aws-load-balancer-type: nlb
+              alb.ingress.kubernetes.io/healthcheck-path: /healthz/ready
+              alb.ingress.kubernetes.io/healthcheck-port: '32197'
           hpaSpec:
             minReplicas: 2
-          serviceAnnotations:
-            service.beta.kubernetes.io/aws-load-balancer-type: nlb
-            alb.ingress.kubernetes.io/healthcheck-path: /healthz/ready
-            alb.ingress.kubernetes.io/healthcheck-port: '32197'
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
     pilot:
       enabled: true
       k8s:
@@ -60,3 +74,9 @@ spec:
             ]
         hpaSpec:
           minReplicas: 2
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            cpu: 200m
+            memory: 256Mi

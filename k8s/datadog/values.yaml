@@ -1,0 +1,49 @@
+# https://artifacthub.io/packages/helm/datadog/datadog
+clusterName: monitoring
+
+## Set to 'datadoghq.com' to send data to the US1 site (default).
+## Set to 'datadoghq.eu' to send data to the EU site.
+## Set to 'us3.datadoghq.com' to send data to the US3 site.
+## Set to 'us5.datadoghq.com' to send data to the US5 site.
+## Set to 'ddog-gov.com' to send data to the US1-FED site.
+## Set to 'ap1.datadoghq.com' to send data to the AP1 site.
+
+datadog:
+  site: us5.datadoghq.com
+  apiKey: f6701d7cb9da8f4e536ae207a3e2f552
+  appKey: fc8f362168ca67cef945955fdf20b8585c555e15
+  kubelet: 
+    tlsVerify: false
+  
+  # "Set up the Istio integration"
+  clusterChecks:
+    enabled: true
+
+  # Set up Istio log collection
+  logs:
+    enabled: true
+    containerCollectAll: true
+
+  apm:
+    portEnabled: true
+    port: 8126 # Default port for Datadog APM
+    instrumentation:
+      enabled: true
+
+  processAgent:
+    processCollection: true
+  networkMonitoring:
+    enabled: true
+
+clusterAgent:
+  enabled: true
+  admissionController:
+    enabled: true
+    mutateUnlabelled: false
+  replicas: 2
+  createPodDisruptionBudget: true
+  podAnnotations:
+    sidecar.istio.io/inject: "false"
+agents:
+  podAnnotations:
+    sidecar.istio.io/inject: "false"

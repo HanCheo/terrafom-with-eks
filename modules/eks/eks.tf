@@ -21,6 +21,9 @@ module "eks" {
 	enable_cluster_creator_admin_permissions = true
 
 	cluster_addons = {
+		kube-proxy = {
+			more_recent = true
+		}
     coredns                = {
 			more_recent = true
 		}
@@ -56,12 +59,11 @@ module "eks" {
 
   eks_managed_node_groups = {
     ("${var.cluster_name}") = {
-      min_size     = 1 # 최소
-      max_size     = 2 # 최대
-      desired_size = 1 # 기본 유지
-
+      min_size     = 1
+      max_size     = 2
+      desired_size = 1
       labels = {
-        ondemand = "true"
+        ondemand = true
       }
     }
   }

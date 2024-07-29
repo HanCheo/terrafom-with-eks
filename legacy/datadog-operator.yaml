@@ -2,7 +2,7 @@
 apiVersion: datadoghq.com/v2alpha1
 kind: DatadogAgent
 metadata:
-  name: datadog
+  name: datadog-operator
 spec:
   global:
     # Site is the Datadog intake site Agent data are sent to.
@@ -18,8 +18,8 @@ spec:
       tlsVerify: false
     # config your datadog api and app key
     credentials:
-      apiKey: api-key
-      appKey: application-key
+      apiKey: 
+      appKey: 
   features:
     admissionController:
       enabled: true
