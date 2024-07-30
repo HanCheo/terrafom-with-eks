@@ -12,6 +12,9 @@ locals {
 resource "aws_vpc" "moby_vpc" {
 	cidr_block = var.cidr
 
+	enable_dns_hostnames = true
+	enable_dns_support = true
+
 	tags = {
 		Name = "${var.name}_vpc"
 	}
@@ -26,6 +29,7 @@ resource "aws_subnet" "public_subnet" {
 	map_public_ip_on_launch = true
 
 	tags = {
+		 "kubernetes.io/role/elb" = 1
 		Name = "${var.name}_vpc_public_subnet_${index(local.subnet.public, each.value)}"
 	}
 }
@@ -38,6 +42,7 @@ resource "aws_subnet" "private_subnet" {
 	map_public_ip_on_launch = false
 	
 	tags = {
+		"kubernetes.io/role/internal-elb" = 1
 		Name = "${var.name}_vpc_private_subnet_${index(local.subnet.private, each.value)}"
 	}
 }

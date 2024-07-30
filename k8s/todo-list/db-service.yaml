@@ -2,24 +2,22 @@ apiVersion: v1
 kind: Service
 metadata:
   name: todo-db
-  annotations:
-    sidecar.istio.io/inject: 'true'
 spec:
   ports:
     - port: 5432
       targetPort: 5432
   selector:
     app: todo-db
-  type: ClusterIP
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: todo-db
+  name: todo-db-deployment
   labels:
-    tags.datadoghq.com/env: prod
-    tags.datadoghq.com/service: todo-db
-    tags.datadoghq.com/version: v1
+    app: todo-db
+    tags.datadoghq.com/env: "dev"
+    tags.datadoghq.com/service: "todo-db"
+    tags.datadoghq.com/version: "12"
 spec:
   replicas: 1
   selector:
@@ -29,6 +27,13 @@ spec:
     metadata:
       labels:
         app: todo-db
+        sidecar.istio.io/inject: "true"
+        admission.datadoghq.com/enabled: "true"
+        tags.datadoghq.com/env: "dev"
+        tags.datadoghq.com/service: "todo-db"
+        tags.datadoghq.com/version: "12"
+      annotations:
+        admission.datadoghq.com/java-lib.version: "latest"
     spec:
       containers:
         - name: db
@@ -36,20 +41,6 @@ spec:
           env:
             - name: POSTGRES_PASSWORD_FILE
               value: /secrets/postgres_password
-            - name: DD_LOGS_INJECTION
-              value: 'true'
-            - name: DD_ENV
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/env']
-            - name: DD_SERVICE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/service']
-            - name: DD_VERSION
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.labels['tags.datadoghq.com/version']
           volumeMounts:
             - name: secret
               mountPath: '/secrets'

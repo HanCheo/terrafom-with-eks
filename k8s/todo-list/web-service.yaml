@@ -8,15 +8,18 @@ spec:
       targetPort: 80
   selector:
     app: todo-web
+  type: ClusterIP
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: todo-web-deployment
   labels:
-    tags.datadoghq.com/env: dev
-    tags.datadoghq.com/service: alpine
-    tags.datadoghq.com/version: v1
+    app: todo-web
+    sidecar.istio.io/inject: "true"
+    tags.datadoghq.com/env: "dev"
+    tags.datadoghq.com/service: "todo-web"
+    tags.datadoghq.com/version: "12"
 spec:
   replicas: 1
   selector:
@@ -31,9 +34,13 @@ spec:
     metadata:
       labels:
         app: todo-web
-        tags.datadoghq.com/env: dev
-        tags.datadoghq.com/service: alpine
-        tags.datadoghq.com/version: v1
+        sidecar.istio.io/inject: "true"
+        admission.datadoghq.com/enabled: "true"
+        tags.datadoghq.com/env: "dev"
+        tags.datadoghq.com/service: "todo-web"
+        tags.datadoghq.com/version: "12"
+      annotations:
+          admission.datadoghq.com/java-lib.version: "latest"
     spec:
       containers:
         - name: web

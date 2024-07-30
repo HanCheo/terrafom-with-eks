@@ -1,0 +1,1 @@
+istioctl install -f istio-operator/istio-operator.yaml

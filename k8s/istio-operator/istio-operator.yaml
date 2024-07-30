@@ -1,3 +1,4 @@
+# https://istio.io/latest/docs/reference/config/istio.operator.v1alpha1/
 apiVersion: install.istio.io/v1alpha1
 kind: IstioOperator
 spec:
@@ -9,37 +10,26 @@ spec:
       holdApplicationUntilProxyStarts: true
       tracing: # Enable Datadog Tracing
         datadog:
-          address: $(HOST_IP):8126
-        sampling: 100.0 # 모든 request를 tracing 한다
+          address: "$(HOST_IP):8126"
+        sampling: 100.0
       proxyMetadata:
         # https://github.com/istio/istio/issues/51430 istio brake datadog tracing
-        DD_REMOTE_CONFIGURATION_ENABLED: 'false'
-    accessLogFile: /dev/stdout
-    outboundTrafficPolicy:
-      mode: ALLOW_ANY
-  values:
-    global:
-      logging:
-        level: debug # 또는 info, warn, error 등
-      istioNamespace: istio-system
-    cni:
-      excludeNamespaces:
-        - istio-system
+        DD_REMOTE_CONFIGURATION_ENABLED: "true"
   components:
     cni:
       enabled: true
-    egressGateways:
-      - name: istio-egressgateway
-        enabled: true
-        k8s:
-          hpaSpec:
-            minReplicas: 1
     ingressGateways:
       - name: istio-ingressgateway
         enabled: true
         k8s:
           hpaSpec:
-            minReplicas: 2
+            minReplicas: 1
+          resources:
+            limits:
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
           serviceAnnotations:
             service.beta.kubernetes.io/aws-load-balancer-type: nlb
             alb.ingress.kubernetes.io/healthcheck-path: /healthz/ready
@@ -59,4 +49,10 @@ spec:
               }
             ]
         hpaSpec:
-          minReplicas: 2
+          minReplicas: 1
+        resources:
+          limits:
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
