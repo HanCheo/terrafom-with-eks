@@ -1,5 +1,5 @@
 output "id" {
-	value = aws_vpc.moby_vpc.id
+	value = aws_vpc.sandbox_vpc.id
 	description = "The ID of the VPC"
 }
 

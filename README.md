@@ -17,12 +17,12 @@ module vpc {
 	cidr = "10.20.0.0/16"
 
 	//콘솔에서 보여질 vpc name
-	name = "moby-sandbox"
+	name = "sandbox_vpc"
 }
 module eks {
 	source = "./modules/eks"
 	// 만든 클러스터의 이름
-	cluster_name = "moby-sandbox-eks"
+	cluster_name = "sandbox-eks"
 	vpc = {
 		id = module.vpc.id
 		subnet_ids = module.vpc.private_subnet_ids

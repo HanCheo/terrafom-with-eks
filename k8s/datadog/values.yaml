@@ -5,7 +5,7 @@ datadog:
   appKey: fc8f362168ca67cef945955fdf20b8585c555e15
 
   ## Set to true to enable the your cluster name
-  clusterName: moby-sandbox-eks
+  clusterName: sandbox-eks
   collectEvents: false
   
   # "Set up the Istio integration"
@@ -22,6 +22,9 @@ datadog:
     useSocketVolume: false
     useHostPort: true
   useHostPID: false
+
+
+
 
   apm:
     portEnabled: true

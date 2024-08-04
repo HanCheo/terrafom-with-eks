@@ -1,23 +1,24 @@
+data "aws_caller_identity" "current" {}
 provider "aws" {
 	region = "ap-northeast-2"	
 }
 module vpc {
 	source = "./modules/vpc"
 	cidr = "10.20.0.0/16"
-	name = "moby-sandbox"
+	name = "sandbox"
 }
 module eks {
 	source = "./modules/eks"
-	cluster_name = "moby-sandbox-eks"
+	cluster_name = "sandbox-eks"
 	vpc = {
 		id = module.vpc.id
 		subnet_ids = module.vpc.private_subnet_ids
 	}
 
 	default_node_group_instance = {
-		ami_type = "AL2_x86_64"
+		ami_type = "AL2_ARM_64"
 		disk_size = 10
-		instance_types = ["t3.xlarge"]
+		instance_types = ["t4g.large"]
 		node_group_arn = "arn:aws:iam::058264332540:role/OYG_ServiceRoleForAmazonEKSNodeGroup"
 	}
 
