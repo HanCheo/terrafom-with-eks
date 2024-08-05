@@ -2,43 +2,55 @@
 apiVersion: karpenter.k8s.aws/v1beta1
 kind: EC2NodeClass
 metadata:
-  name: default
+  namespace: karpenter
+  name: karpenter
 spec:
   amiFamily: AL2
-  role: ex-karpenter-mng
+  role: sandbox-eks
   subnetSelectorTerms:
     - tags:
-        karpenter.sh/discovery: ex-karpenter-mng
+        karpenter.sh/discovery: sandbox-eks
   securityGroupSelectorTerms:
     - tags:
-        karpenter.sh/discovery: ex-karpenter-mng
+        karpenter.sh/discovery: sandbox-eks
   tags:
-    karpenter.sh/discovery: ex-karpenter-mng
+    karpenter.sh/discovery: sandbox-eks
 ---
 apiVersion: karpenter.sh/v1beta1
 kind: NodePool
 metadata:
-  name: default
+  namespace: karpenter
+  name: karpenter
 spec:
   template:
     spec:
       nodeClassRef:
-        name: default
+        apiVersion: karpenter.k8s.aws/v1beta1
+        kind: EC2NodeClass
+        name: karpenter
       requirements:
-        - key: "karpenter.k8s.aws/instance-category"
+        # - key: "karpenter.k8s.aws/instance-category"
+        #   operator: In
+        #   values: ["c", "m", "r"]
+        # - key: "karpenter.k8s.aws/instance-memory"
+        #   operator: In
+        #   values: ["4", "8", "16", "32"]
+        # - key: "karpenter.k8s.aws/instance-cpu"
+        #   operator: In
+        #   values: ["1", "2", "4", "8"]
+        # - key: "karpenter.k8s.aws/instance-hypervisor"
+        #   operator: In
+        #   values: ["nitro"]
+        - key: "kubernetes.io/arch"
           operator: In
-          values: ["c", "m", "r"]
-        - key: "karpenter.k8s.aws/instance-cpu"
-          operator: In
-          values: ["4", "8", "16", "32"]
-        - key: "karpenter.k8s.aws/instance-hypervisor"
-          operator: In
-          values: ["nitro"]
-        - key: "karpenter.k8s.aws/instance-generation"
-          operator: Gt
-          values: ["2"]
+          values: ["arm64"]
+        # - key: "karpenter.k8s.aws/instance-generation"
+        #   operator: Gt
+        #   values: ["1"]
   limits:
     cpu: 1000
+    memory: 1000Gi
+
   disruption:
     consolidationPolicy: WhenEmpty
     consolidateAfter: 30s

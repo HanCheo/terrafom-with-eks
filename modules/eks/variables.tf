@@ -24,20 +24,19 @@ variable "default_node_group_instance" {
 		node_group_arn = string
 	})
 	default = {
-		ami_type = "AL2_x86_64"
+		ami_type = "AL2_ARM_64"
 		disk_size = 10
-		instance_types = ["t2.small"]
+		instance_types = ["t4g.medium"]
 		node_group_arn = ""
 	}
 	description = <<EOT
 		node_group_instance = {
-			ami_type : "AL2_x86_64"
+			ami_type : "AL2_ARM_64"
 			disk_size : 10
-			instance_types : "t2.small"
+			instance_types : "t4g.medium"
 			node_group_arn : "node group arn"
 		}
 	EOT
-	
 }
 
 variable "vpc" {

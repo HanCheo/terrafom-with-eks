@@ -3,7 +3,6 @@ variable "name" {
 	default = ""
 	description = "vpc name for tags"
 }
-
 variable "cidr" {
 	type = string
 	default = ""

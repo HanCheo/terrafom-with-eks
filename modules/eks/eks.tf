@@ -1,5 +1,9 @@
 data "aws_caller_identity" "current" {}
 
+locals {
+  default_node_name = "karpenter"
+}
+
 module "eks" {
 	source = "terraform-aws-modules/eks/aws"
   version = "~> 20.20.0"
@@ -70,7 +74,7 @@ module "eks" {
   }
 
   eks_managed_node_groups = {
-    karpenter = {
+    ("${local.default_node_name}") = {
       min_size     = 1
       max_size     = 3
       desired_size = 1
@@ -78,6 +82,7 @@ module "eks" {
       labels = {
         # Used to ensure Karpenter runs on nodes that it does not manage
         "karpenter.sh/controller" = "true"
+        ondemand = true
       }
 
       taints = {
@@ -88,14 +93,6 @@ module "eks" {
           value  = "true"
           effect = "NO_SCHEDULE"
         }
-      }
-    }
-    ("${var.cluster_name}") = {
-      min_size     = 1
-      max_size     = 5
-      desired_size = 1
-      labels = {
-        ondemand = true
       }
     }
   }
@@ -133,17 +130,32 @@ module "karpenter" {
 ################################################################################
 
 resource "helm_release" "karpenter" {
-  namespace           = "kube-system"
+  namespace           = "karpenter"
   name                = "karpenter"
   repository          = "oci://public.ecr.aws/karpenter"
   chart               = "karpenter"
-  version             = "0.36.2"
+  version             = "0.37.0"
   wait                = false
 
   values = [
     <<-EOT
     nodeSelector:
-      karpenter.sh/controller: 'true'
+      karpenter.sh/controller: "true"
+    affinity: 
+      nodeAffinity: 
+        requiredDuringSchedulingIgnoredDuringExecution: 
+          nodeSelectorTerms: 
+            - matchExpressions: 
+              - key: karpenter.sh/nodepool
+                operator: DoesNotExist
+            - matchExpressions:
+              - key: eks.amazonaws.com/nodegroup
+                operator: In
+                values:
+                - ${local.default_node_name}
+      podAntiAffinity: 
+        requiredDuringSchedulingIgnoredDuringExecution:
+          # - topologyKey: kubernetes.io/hostname
     tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
