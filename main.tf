@@ -11,6 +11,8 @@ provider "helm" {
 provider "kubectl" {
 	config_path = "~/.kube/config"
 }
+
+
 module vpc {
 	source = "./modules/vpc"
 	cidr = "10.20.0.0/16"

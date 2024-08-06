@@ -44,7 +44,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: hancheo/todo-db-fix
+          image: hancheo/todo-db-fix:arm
           env:
             - name: ASPNETCORE_ENVIRONMENT
               value: Test

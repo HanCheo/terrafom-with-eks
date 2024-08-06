@@ -4,6 +4,7 @@ locals {
   default_node_name = "karpenter"
 }
 
+
 module "eks" {
 	source = "terraform-aws-modules/eks/aws"
   version = "~> 20.20.0"
@@ -49,6 +50,18 @@ module "eks" {
     vpc-cni                = {
 			before_compute = true
 			more_recent = true
+      configuration_values = jsonencode({
+        env = {
+          ENABLE_POD_ENI           = "true"
+          ENABLE_PREFIX_DELEGATION = "true"
+          WARM_PREFIX_TARGET       = "1"
+        }
+        init = {
+          env = {
+            DISABLE_TCP_EARLY_DEMUX = "true"
+          }
+        }
+      })
 		}
   }	
 
@@ -84,16 +97,6 @@ module "eks" {
         "karpenter.sh/controller" = "true"
         ondemand = true
       }
-
-      taints = {
-        # The pods that do not tolerate this taint should run on nodes
-        # created by Karpenter
-        karpenter = {
-          key    = "karpenter.sh/controller"
-          value  = "true"
-          effect = "NO_SCHEDULE"
-        }
-      }
     }
   }
 
@@ -121,8 +124,22 @@ module "karpenter" {
   # Name needs to match role name passed to the EC2NodeClass
   node_iam_role_use_name_prefix   = false
   node_iam_role_name              = var.cluster_name
+  
+  enable_pod_identity             = true
   create_pod_identity_association = true
+
+  # Used to attach additional IAM policies to the Karpenter node IAM role
+  node_iam_role_additional_policies = {
+    AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  }
 }
+
+output "karpenter_queue_name" {
+  description = "The namespace where Karpenter is installed"
+  value       = module.karpenter.queue_name
+  
+}
+
 
 
 ################################################################################
@@ -130,6 +147,7 @@ module "karpenter" {
 ################################################################################
 
 resource "helm_release" "karpenter" {
+  create_namespace = true
   namespace           = "karpenter"
   name                = "karpenter"
   repository          = "oci://public.ecr.aws/karpenter"
@@ -139,20 +157,13 @@ resource "helm_release" "karpenter" {
 
   values = [
     <<-EOT
-    nodeSelector:
-      karpenter.sh/controller: "true"
-    affinity: 
-      nodeAffinity: 
-        requiredDuringSchedulingIgnoredDuringExecution: 
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms: 
             - matchExpressions: 
               - key: karpenter.sh/nodepool
                 operator: DoesNotExist
-            - matchExpressions:
-              - key: eks.amazonaws.com/nodegroup
-                operator: In
-                values:
-                - ${local.default_node_name}
       podAntiAffinity: 
         requiredDuringSchedulingIgnoredDuringExecution:
           # - topologyKey: kubernetes.io/hostname
@@ -165,8 +176,84 @@ resource "helm_release" "karpenter" {
     settings:
       clusterName: ${module.eks.cluster_name}
       clusterEndpoint: ${module.eks.cluster_endpoint}
-      interruptionQueue: ${module.karpenter.queue_name}
     EOT
   ]
+}
 
+resource "kubectl_manifest" "karpenter_node_class" {
+  yaml_body = <<-YAML
+    apiVersion: karpenter.k8s.aws/v1beta1
+    kind: EC2NodeClass
+    metadata:
+      name: default
+    spec:
+      amiFamily: AL2023
+      role: ${module.karpenter.node_iam_role_name}
+      subnetSelectorTerms:
+        - tags:
+            karpenter.sh/discovery: ${module.eks.cluster_name}
+      securityGroupSelectorTerms:
+        - tags:
+            karpenter.sh/discovery: ${module.eks.cluster_name}
+      tags:
+        karpenter.sh/discovery: ${module.eks.cluster_name}
+  YAML
+
+  depends_on = [
+    helm_release.karpenter
+  ]
+}
+
+resource "kubectl_manifest" "karpenter_node_pool" {
+  yaml_body = <<-YAML
+    apiVersion: karpenter.sh/v1beta1
+    kind: NodePool
+    metadata:
+      name: default
+    spec:
+      template:
+        spec:
+          nodeClassRef:
+            apiVersion: karpenter.k8s.aws/v1beta1
+            kind: EC2NodeClass
+            name: default
+          requirements:
+            - key: node.kubernetes.io/instance-type
+              operator: In
+              values: ["t4g.medium", "t4g.large", "t4g.xlarge"]
+            # - key: "karpenter.k8s.aws/instance-category"
+            #   operator: In
+            #   values: ["t"]
+            # - key: "karpenter.k8s.aws/instance-memory"
+            #   operator: In
+            #   values: ["4", "8"]
+            # - key: "karpenter.k8s.aws/instance-cpu"
+            #   operator: In
+            #   values: ["1", "2"]
+            # - key: "karpenter.k8s.aws/instance-hypervisor"
+            #   operator: In
+            #   values: ["nitro"]
+            # - key: karpenter.k8s.aws/instance-family
+            #   operator: In
+            #   values: ["t4g"]
+            - key: "kubernetes.io/arch"
+              operator: In
+              values: ["arm64"]
+            - key: karpenter.sh/capacity-type
+              operator: In
+              values: ["on-demand"]
+            # - key: "karpenter.k8s.aws/instance-generation"
+            #   operator: Gt
+            #   values: ["1"]
+      limits:
+        cpu: 1000
+        memory: 1000Gi
+      disruption:
+        consolidationPolicy: WhenEmpty
+        consolidateAfter: 30s
+  YAML
+
+  depends_on = [
+    kubectl_manifest.karpenter_node_class
+  ]
 }
