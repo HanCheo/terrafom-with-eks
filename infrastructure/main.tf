@@ -1,4 +1,5 @@
 data "aws_caller_identity" "current" {}
+
 provider "aws" {
 	region = "ap-northeast-2"	
 }
@@ -12,15 +13,14 @@ provider "kubectl" {
 	config_path = "~/.kube/config"
 }
 
-
 module vpc {
 	source = "./modules/vpc"
 	cidr = "10.20.0.0/16"
-	name = "sandbox"
+	name = "dev-sandbox"
 }
 module eks {
 	source = "./modules/eks"
-	cluster_name = "sandbox-eks"
+	cluster_name = "dev-sandbox-eks"
 	vpc = {
 		id = module.vpc.id
 		subnet_ids = module.vpc.private_subnet_ids
@@ -34,3 +34,16 @@ module eks {
 
 	cluster_arn = "arn:aws:iam::058264332540:role/OYG_ServiceRoleForAmazonEKSCluster"
 }
+
+# resource "aws_acm_certificate" "cert" {
+#   domain_name       = "mobilog.me"
+#   validation_method = "DNS"
+
+#   tags = {
+#     Environment = "test"
+#   }
+
+#   lifecycle {
+#     create_before_destroy = true
+#   }
+# }

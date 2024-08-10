@@ -25,7 +25,7 @@ resource "aws_subnet" "public_subnet" {
 	for_each = toset(local.subnet.public)
 
 	cidr_block = each.value
-	availability_zone = local.az[floor(index(local.subnet.public, each.value) / 2)]
+	availability_zone = local.az[index(local.subnet.public, each.value)]
 	map_public_ip_on_launch = true
 
 	tags = {
@@ -45,7 +45,7 @@ resource "aws_subnet" "private_subnet" {
 		"kubernetes.io/role/internal-elb" = 1
 		Name = "${var.name}_vpc_private_subnet_${index(local.subnet.private, each.value)}"
     # Tags subnets for Karpenter auto-discovery
-    "karpenter.sh/discovery" = "sandbox-eks"
+    "karpenter.sh/discovery" = "dev-sandbox-eks"
 	}
 }
 
