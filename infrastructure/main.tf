@@ -1,3 +1,11 @@
+terraform {
+  backend "s3" {
+    bucket         = "moby-sandbox-terraform-state"
+    key            = "terraform.tfstate"
+    region         = "ap-northeast-2"
+  }
+}
+
 data "aws_caller_identity" "current" {}
 
 provider "aws" {

@@ -21,7 +21,7 @@ metadata:
     tags.datadoghq.com/service: "todo-web"
     tags.datadoghq.com/version: "12"
 spec:
-  replicas: 10
+  replicas: 1
   selector:
     matchLabels:
       app: todo-web
