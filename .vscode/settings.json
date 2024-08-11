@@ -1,0 +1,7 @@
+{
+	"editor.defaultFormatter": "hashicorp.terraform",
+	"terraform.experimentalFeatures.validateOnSave": true,
+	"[hcl]": {
+		"editor.defaultFormatter": "fredwangwang.vscode-hcl-format"
+	},
+}

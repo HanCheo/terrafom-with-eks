@@ -1,2 +1,2 @@
 ## eks cluster name
-cluster_name="dev-sandbox-eks"
+cluster_name = "dev-sandbox-eks"

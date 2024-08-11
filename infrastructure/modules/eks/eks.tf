@@ -6,25 +6,25 @@ locals {
 
 
 module "eks" {
-	source = "terraform-aws-modules/eks/aws"
+  source  = "terraform-aws-modules/eks/aws"
   version = "~> 20.20.0"
 
-	cluster_name = var.cluster_name
-	cluster_version = var.cluster_version
+  cluster_name    = var.cluster_name
+  cluster_version = var.cluster_version
 
-	cluster_endpoint_private_access = true
-	cluster_endpoint_public_access = true
+  cluster_endpoint_private_access = true
+  cluster_endpoint_public_access  = true
 
-	include_oidc_root_ca_thumbprint = true
-	enable_irsa = true
+  include_oidc_root_ca_thumbprint = true
+  enable_irsa                     = true
 
-	vpc_id = var.vpc.id
-	subnet_ids = var.vpc.subnet_ids
-	
-	# iam_role_arn = var.cluster_arn
-	create_iam_role = true
+  vpc_id     = var.vpc.id
+  subnet_ids = var.vpc.subnet_ids
 
-	enable_cluster_creator_admin_permissions = true
+  # iam_role_arn = var.cluster_arn
+  create_iam_role = true
+
+  enable_cluster_creator_admin_permissions = true
 
   node_security_group_tags = {
     # https://github.com/kubernetes/kubernetes/issues/73906
@@ -32,12 +32,12 @@ module "eks" {
     "kubernetes.io/cluster/${var.cluster_name}" = "owned"
   }
 
-	cluster_addons = {
-		kube-proxy = {
-			more_recent = true
-		}
-    coredns                = {
-			more_recent = true
+  cluster_addons = {
+    kube-proxy = {
+      more_recent = true
+    }
+    coredns = {
+      more_recent = true
       configuration_values = jsonencode({
         tolerations = [
           # Allow CoreDNS to run on the same nodes as the Karpenter controller
@@ -49,14 +49,14 @@ module "eks" {
           }
         ]
       })
-		}
+    }
     eks-pod-identity-agent = {
-			more_recent = true
-		}
+      more_recent = true
+    }
 
-    vpc-cni                = {
-			before_compute = true
-			more_recent = true
+    vpc-cni = {
+      before_compute = true
+      more_recent    = true
       # Enable VPC-CNI prefix mode.
       # https://trans.yonghochoi.com/translations/aws_vpc_cni_increase_pods_per_node_limits.ko
       configuration_values = jsonencode({
@@ -71,10 +71,10 @@ module "eks" {
           }
         }
       })
-		}
+    }
   }
 
-	eks_managed_node_group_defaults = var.default_node_group_instance
+  eks_managed_node_group_defaults = var.default_node_group_instance
 
   node_security_group_additional_rules = {
     ingress_15017 = {
@@ -104,7 +104,7 @@ module "eks" {
       labels = {
         # Used to ensure Karpenter runs on nodes that it does not manage
         "karpenter.sh/controller" = "true"
-        ondemand = false
+        ondemand                  = false
       }
     }
   }
@@ -130,6 +130,6 @@ output "cluster_name" {
 
 output "cluster_endpoint" {
   description = "value of the endpoint for the Kubernetes API server"
-  value = module.eks.cluster_endpoint
+  value       = module.eks.cluster_endpoint
 }
 

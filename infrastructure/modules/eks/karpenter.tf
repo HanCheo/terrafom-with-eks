@@ -8,13 +8,13 @@ module "karpenter" {
   # node_iam_role_use_name_prefix   = false
   # node_iam_role_name              = var.cluster_name
 
-  irsa_oidc_provider_arn          = module.eks.oidc_provider_arn
+  irsa_oidc_provider_arn = module.eks.oidc_provider_arn
 
-  create_iam_role      = true
+  create_iam_role         = true
   create_instance_profile = true
-  create_node_iam_role = true
+  create_node_iam_role    = true
 
-  enable_irsa = true
+  enable_irsa                     = true
   enable_pod_identity             = true
   create_pod_identity_association = true
 
@@ -29,13 +29,13 @@ module "karpenter" {
 ################################################################################
 
 resource "helm_release" "karpenter" {
-  create_namespace    = true
-  namespace           = "kube-system"
-  name                = "karpenter"
-  repository          = "oci://public.ecr.aws/karpenter"
-  chart               = "karpenter"
-  version             = "0.37.0"
-  wait                = false
+  create_namespace = true
+  namespace        = "kube-system"
+  name             = "karpenter"
+  repository       = "oci://public.ecr.aws/karpenter"
+  chart            = "karpenter"
+  version          = "0.37.0"
+  wait             = false
 
   values = [
     <<-EOT
