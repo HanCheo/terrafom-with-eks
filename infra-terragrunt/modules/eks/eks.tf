@@ -1,5 +1,3 @@
-data "aws_caller_identity" "current" {}
-
 locals {
   default_node_name = "karpenter"
 }
@@ -17,8 +15,9 @@ module "eks" {
   include_oidc_root_ca_thumbprint = true
   enable_irsa                     = true
 
-  vpc_id     = var.vpc.id
-  subnet_ids = var.vpc.subnet_ids
+  vpc_id = var.vpc.id
+  // public subnet이 있는 AZ에 속한 private subnets을 사용
+  subnet_ids = slice(var.vpc.subnet_ids, 0, 4)
 
   # iam_role_arn = var.cluster_arn
   create_iam_role = true
@@ -95,7 +94,7 @@ module "eks" {
   }
 
   eks_managed_node_groups = {
-    ("${var.cluster_name}-${local.default_node_name}") = {
+    ("${local.default_node_name}") = {
       min_size     = 1
       max_size     = 3
       desired_size = 1

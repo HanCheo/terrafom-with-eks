@@ -17,9 +17,9 @@ metadata:
   labels:
     app: todo-web
     sidecar.istio.io/inject: "true"
-    tags.datadoghq.com/env: "dev"
-    tags.datadoghq.com/service: "todo-web"
-    tags.datadoghq.com/version: "12"
+    # tags.datadoghq.com/env: "dev"
+    # tags.datadoghq.com/service: "todo-web"
+    # tags.datadoghq.com/version: "12"
 spec:
   replicas: 1
   selector:
@@ -35,16 +35,16 @@ spec:
       labels:
         app: todo-web
         sidecar.istio.io/inject: "true"
-        admission.datadoghq.com/enabled: "true"
-        tags.datadoghq.com/env: "dev"
-        tags.datadoghq.com/service: "todo-web"
-        tags.datadoghq.com/version: "12"
+        # admission.datadoghq.com/enabled: "true"
+        # tags.datadoghq.com/env: "dev"
+        # tags.datadoghq.com/service: "todo-web"
+        # tags.datadoghq.com/version: "12"
       annotations:
-          admission.datadoghq.com/java-lib.version: "latest"
+        admission.datadoghq.com/java-lib.version: "latest"
     spec:
       containers:
         - name: web
-          image: hancheo/todo-db-fix:arm
+          image: httpd
           env:
             - name: ASPNETCORE_ENVIRONMENT
               value: Test

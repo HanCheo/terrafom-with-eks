@@ -22,6 +22,8 @@ module "karpenter" {
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   }
+
+  depends_on = [module.eks]
 }
 
 ################################################################################
@@ -76,6 +78,8 @@ resource "helm_release" "karpenter" {
 				} 
     EOT
   ]
+
+  depends_on = [module.eks]
 }
 
 resource "kubectl_manifest" "karpenter_node_class" {

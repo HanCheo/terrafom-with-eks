@@ -21,13 +21,12 @@ variable "default_node_group_instance" {
     ami_type       = string
     disk_size      = number
     instance_types = list(string)
-    node_group_arn = string
+    node_group_arn = optional(string)
   })
   default = {
     ami_type       = "AL2_ARM_64"
     disk_size      = 10
     instance_types = ["t4g.medium"]
-    node_group_arn = ""
   }
   description = <<EOT
 		node_group_instance = {

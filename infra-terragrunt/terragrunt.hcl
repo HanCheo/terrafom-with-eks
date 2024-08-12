@@ -15,9 +15,11 @@ locals {
   environment_vars = read_terragrunt_config(find_in_parent_folders("env.hcl"))
 
   # Extract the variables we need for easy access
-  account_name = local.account_vars.locals.account_name
-  account_id   = local.account_vars.locals.aws_account_id
-  aws_region   = local.region_vars.locals.aws_region
+  account_name          = local.account_vars.locals.account_name
+  account_id            = local.account_vars.locals.aws_account_id
+  aws_access_key_id     = local.account_vars.locals.aws_access_key_id
+  aws_secret_access_key = local.account_vars.locals.aws_secret_access_key
+  aws_region            = local.region_vars.locals.aws_region
 }
 
 # Generate an AWS provider block
@@ -27,9 +29,10 @@ generate "provider" {
   contents  = <<EOF
 provider "aws" {
   region = "${local.aws_region}"
-
+  access_key = "${local.aws_access_key_id}"
+  secret_key = "${local.aws_secret_access_key}"
   # Only these AWS Account IDs may be operated on by this template
-  allowed_account_ids = ["${local.account_id}"]
+  # allowed_account_ids = ["${local.account_id}"]
 }
 EOF
 }
@@ -53,13 +56,13 @@ remote_state {
 }
 
 # Configure what repos to search when you run 'terragrunt catalog'
-catalog {
-  urls = [
-    "https://github.com/gruntwork-io/terragrunt-infrastructure-modules-example",
-    "https://github.com/gruntwork-io/terraform-aws-utilities",
-    "https://github.com/gruntwork-io/terraform-kubernetes-namespace"
-  ]
-}
+// catalog {
+//   urls = [
+//     "https://github.com/gruntwork-io/terragrunt-infrastructure-modules-example",
+//     "https://github.com/gruntwork-io/terraform-aws-utilities",
+//     "https://github.com/gruntwork-io/terraform-kubernetes-namespace"
+//   ]
+// }
 
 # ---------------------------------------------------------------------------------------------------------------------
 # GLOBAL PARAMETERS
@@ -69,8 +72,8 @@ catalog {
 
 # Configure root level variables that all resources can inherit. This is especially helpful with multi-account configs
 # where terraform_remote_state data sources are placed directly into the modules.
-inputs = merge(
-  local.account_vars.locals,
-  local.region_vars.locals,
-  local.environment_vars.locals,
-)
+// inputs = merge(
+//   local.account_vars.locals,
+//   local.region_vars.locals,
+//   local.environment_vars.locals,
+// )

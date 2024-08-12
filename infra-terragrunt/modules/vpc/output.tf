@@ -1,5 +1,5 @@
-output "vpc" {
-  value       = aws_vpc.sandbox_vpc
+output "id" {
+  value       = aws_vpc.sandbox_vpc.id
   description = "The ID of the VPC"
 }
 output "private_subnet_ids" {
