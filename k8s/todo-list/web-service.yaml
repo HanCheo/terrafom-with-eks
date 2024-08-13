@@ -20,6 +20,8 @@ metadata:
     # tags.datadoghq.com/env: "dev"
     # tags.datadoghq.com/service: "todo-web"
     # tags.datadoghq.com/version: "12"
+  annotations:
+    sidecar.istio.io/interceptionMode: "TPROXY"
 spec:
   replicas: 1
   selector:
@@ -44,7 +46,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: httpd
+          image: hancheo/todo-db-fix:arm
           env:
             - name: ASPNETCORE_ENVIRONMENT
               value: Test

@@ -8,11 +8,8 @@ spec:
   gateways:
     - todo-web-gateway
   http:
-    - match:
-        - uri:
-            prefix: /
-      route:
-        - destination:
-            host: todo-web-service
-            port:
-              number: 8081
+  - route:
+      - destination:
+          host: todo-web-service.default.cluster.svc.local
+          port:
+            number: 8081

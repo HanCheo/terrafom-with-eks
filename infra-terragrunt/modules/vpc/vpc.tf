@@ -38,14 +38,14 @@ resource "aws_subnet" "private_subnet" {
   for_each                = toset(local.subnet.private)
   vpc_id                  = aws_vpc.sandbox_vpc.id
   cidr_block              = each.value
-  availability_zone       = local.az[floor(index(local.subnet.private, each.value) / 2)]
+  availability_zone       = local.az[index(local.subnet.private, each.value) % 2]
   map_public_ip_on_launch = false
 
   tags = {
-    "kubernetes.io/role/internal-elb" = 1
+    "kubernetes.io/role/internal-elb" = index(local.subnet.private, each.value) < 4 ? 1 : null
     Name                              = "${var.name}_vpc_private_subnet_${index(local.subnet.private, each.value)}"
     # Tags subnets for Karpenter auto-discovery
-    "karpenter.sh/discovery" = "${var.eks_cluster_name}"
+    "karpenter.sh/discovery" = index(local.subnet.private, each.value) < 4 ? "${var.eks_cluster_name}" : null
   }
 }
 

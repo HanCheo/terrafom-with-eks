@@ -3,6 +3,11 @@ output "configure_kubectl" {
   value       = "aws eks --region ap-northeast-2 update-kubeconfig --name ${var.cluster_name}"
 }
 
+output "oidc_provider_arn" {
+  description = "The OIDC Identity Provider ARN of the EKS cluster"
+  value       = module.eks.oidc_provider_arn
+}
+
 output "cluster_name" {
   description = "The name of the EKS cluster"
   value       = module.eks.cluster_name
@@ -12,4 +17,3 @@ output "cluster_endpoint" {
   description = "value of the endpoint for the Kubernetes API server"
   value       = module.eks.cluster_endpoint
 }
-

@@ -10,9 +10,6 @@ spec:
   meshConfig:
     enableTracing: true
     defaultConfig:
-      # https://istio.io/latest/docs/ops/configuration/traffic-management/network-topologies/#example-using-x-forwarded-for-capability-with-httpbin
-      gatewayTopology:
-        numTrustedProxies: 1
       holdApplicationUntilProxyStarts: true
       tracing: # Enable Datadog Tracing
         # datadog:
@@ -21,21 +18,23 @@ spec:
       proxyMetadata:
         # https://github.com/istio/istio/issues/51430 istio brake datadog tracing
         DD_REMOTE_CONFIGURATION_ENABLED: "true"
+      gatewayTopology:
+        forwardClientCertDetails: ALWAYS_FORWARD_ONLY
+    accessLogEncoding: JSON
     accessLogFile: /dev/stdout
     outboundTrafficPolicy:
       mode: ALLOW_ANY
   values:
     global:
       istioNamespace: istio-system
-    cni:
-      excludeNamespaces:
-        - istio-system
   components:
+    base:
+      enabled: true
     cni:
       # Installation in kube-system is recommended to ensure the system-node-critical priorityClassName can be used. 
       # You can install in other namespace only on K8S clusters that allow 'system-node-critical' outside of kube-system.
       namespace: kube-system
-      enabled: true
+      enabled: false
       k8s:
         resources:
           requests:
@@ -47,6 +46,8 @@ spec:
       - name: istio-ingressgateway
         enabled: true
         k8s:
+          service:
+            externalTrafficPolicy: Local
           hpaSpec:
             minReplicas: 2
           resources:
@@ -57,10 +58,6 @@ spec:
               memory: 1024Mi
           serviceAnnotations:
             service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-            service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*" 
-            service.beta.kubernetes.io/aws-load-balancer-target-group-attributes: preserve_client_ip.enabled=true
-            alb.ingress.kubernetes.io/healthcheck-path: /healthz/ready
-            alb.ingress.kubernetes.io/healthcheck-port: '32197'
     pilot:
       enabled: true
       k8s:

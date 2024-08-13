@@ -25,7 +25,7 @@ provider "registry.terraform.io/alekc/kubectl" {
 
 provider "registry.terraform.io/hashicorp/aws" {
   version     = "5.59.0"
-  constraints = "~> 5.59.0"
+  constraints = ">= 5.58.0, ~> 5.59.0"
   hashes = [
     "h1:RTI7BbGzkYrknXFSa/Fmh6oNLP0FqgjNb+xyFNJeyKo=",
     "zh:077f41a15057d01d833d7438322adf9b507d17ac0c8e1287430a305b6e609775",

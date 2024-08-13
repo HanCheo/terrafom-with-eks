@@ -2,13 +2,13 @@ module "karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
   version = "~> 20.20.0"
 
-  cluster_name = module.eks.cluster_name
+  cluster_name = var.eks.cluster_name
 
   # Name needs to match role name passed to the EC2NodeClass
   # node_iam_role_use_name_prefix   = false
   # node_iam_role_name              = var.cluster_name
 
-  irsa_oidc_provider_arn = module.eks.oidc_provider_arn
+  irsa_oidc_provider_arn = var.eks.oidc_provider_arn
 
   create_iam_role         = true
   create_instance_profile = true
@@ -21,6 +21,11 @@ module "karpenter" {
   # Used to attach additional IAM policies to the Karpenter node IAM role
   node_iam_role_additional_policies = {
     AmazonSSMManagedInstanceCore = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  }
+
+  tags = {
+    Environment = var.env
+    Terraform   = "true"
   }
 }
 
@@ -59,8 +64,8 @@ resource "helm_release" "karpenter" {
         operator: Exists
         effect: NoSchedule
     settings:
-      clusterName: ${module.eks.cluster_name}
-      clusterEndpoint: ${module.eks.cluster_endpoint}
+      clusterName: ${var.eks.cluster_name}
+      clusterEndpoint: ${var.eks.cluster_endpoint}
       interruptionQueue: ${module.karpenter.queue_name}
 		podAnnotations: |
 			ad.datadoghq.com/controller.checks: |
@@ -91,12 +96,12 @@ resource "kubectl_manifest" "karpenter_node_class" {
       role: ${module.karpenter.node_iam_role_name}
       subnetSelectorTerms:
         - tags:
-            karpenter.sh/discovery: ${module.eks.cluster_name}
+            karpenter.sh/discovery: ${var.eks.cluster_name}
       securityGroupSelectorTerms:
         - tags:
-            karpenter.sh/discovery: ${module.eks.cluster_name}
+            karpenter.sh/discovery: ${var.eks.cluster_name}
       tags:
-        karpenter.sh/discovery: ${module.eks.cluster_name}
+        karpenter.sh/discovery: ${var.eks.cluster_name}
   YAML
 
   depends_on = [
